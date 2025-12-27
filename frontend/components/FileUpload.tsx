@@ -28,7 +28,8 @@ export default function FileUpload() {
                 });
 
                 if (!response.ok) {
-                    throw new Error(`Failed to upload ${file.name}`);
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `Failed to upload ${file.name}`);
                 }
             }
             setStatus('All files processed successfully!');
