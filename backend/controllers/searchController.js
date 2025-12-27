@@ -1,4 +1,5 @@
-const { OpenAIEmbeddings, ChatOpenAI } = require("@langchain/openai");
+const { HuggingFaceTransformersEmbeddings } = require("@langchain/community/embeddings/huggingface_transformers");
+const { ChatCerebras } = require("@langchain/cerebras");
 const { MongoDBAtlasVectorSearch } = require("@langchain/mongodb");
 const mongoose = require("mongoose");
 const { PromptTemplate } = require("@langchain/core/prompts");
@@ -13,10 +14,12 @@ exports.compareContracts = async (req, res) => {
 
         // 1. Setup Vector Store
         const collection = mongoose.connection.db.collection("contracts");
-        const vectorStore = new MongoDBAtlasVectorSearch(new OpenAIEmbeddings(), {
+        const vectorStore = new MongoDBAtlasVectorSearch(new HuggingFaceTransformersEmbeddings({
+            modelName: "Xenova/all-MiniLM-L6-v2",
+        }), {
             collection,
             indexName: "default",
-            textKey: "text",
+            textKey: "pageContent",
             embeddingKey: "embedding",
         });
 
@@ -30,10 +33,11 @@ exports.compareContracts = async (req, res) => {
             `Source: ${d.metadata.source}\nContent: ${d.pageContent}`
         ).join("\n\n");
 
-        // 4. Call LLM for Comparison
-        const model = new ChatOpenAI({
-            modelName: "gpt-4o",
-            temperature: 0
+        // 4. Call LLM for Comparison (Cerebras)
+        const model = new ChatCerebras({
+            model: "llama3.1-70b",
+            temperature: 0,
+            apiKey: process.env.CEREBRAS_API_KEY
         });
 
         const promptTemplate = PromptTemplate.fromTemplate(`

@@ -13,14 +13,19 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@huggingface/transformers": "^3.8.1",
+    "@langchain/cerebras": "^1.0.1",
+    "@langchain/community": "^1.1.1",
+    "@langchain/core": "^1.1.8",
     "@langchain/mongodb": "^1.1.0",
     "@langchain/openai": "^1.2.0",
+    "@langchain/textsplitters": "^1.0.1",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "langchain": "^1.2.3",
     "mongoose": "^9.0.2",
     "multer": "^2.0.2",
-    "pdf-parse": "^2.4.5"
+    "pdf-parse": "1.1.1"
   }
 }

@@ -14,8 +14,11 @@ app.use(express.json());
 
 // Database Connection
 mongoose.connect(process.env.MONGODB_URI)
-    .then(() => console.log('MongoDB Connected'))
-    .catch(err => console.log(err));
+    .then(() => console.log('✅ MongoDB Connected'))
+    .catch(err => {
+        console.error('❌ MongoDB Connection Error:', err);
+        // Optional: process.exit(1); // Keep running to allow diagnosis
+    });
 
 // Routes
 const uploadRoutes = require('./routes/upload');
@@ -26,6 +29,17 @@ app.use('/api/search', searchRoutes);
 
 app.get('/', (req, res) => {
     res.send('Contract Scout API Running');
+});
+
+// 404 Handler
+app.use((req, res, next) => {
+    res.status(404).json({ error: "Route not found" });
+});
+
+// Global Error Handler
+app.use((err, req, res, next) => {
+    console.error("Unhandled Error:", err);
+    res.status(500).json({ error: err.message || "Internal Server Error" });
 });
 
 app.listen(PORT, () => {
