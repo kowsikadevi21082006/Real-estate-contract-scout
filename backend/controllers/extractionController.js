@@ -28,7 +28,7 @@ exports.extractAllMetadata = async (req, res) => {
             const context = docs.map(d => d.pageContent).join("\n\n");
 
             const promptTemplate = PromptTemplate.fromTemplate(`
-                Extract key lease information from the following contract text.
+                Extract key lease information and identify "Red Flags" from the following contract text.
                 Text:
                 {context}
 
@@ -37,6 +37,7 @@ exports.extractAllMetadata = async (req, res) => {
                 - lease_end_date: (YYYY-MM-DD or "Not found")
                 - notice_period: (e.g., "30 days", "2 months")
                 - security_deposit: (e.g., "$1000")
+                - red_flags: (Briefly describe any illegal or unusual clauses like excessive deposits, mandatory professional cleaning fees, or unfair notice periods. If none, state "None detected")
                 - source: {source}
             `);
 
