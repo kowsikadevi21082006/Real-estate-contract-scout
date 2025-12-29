@@ -24,13 +24,14 @@ exports.compareContracts = async (req, res) => {
         });
 
         // 2. Retrieve relevant chunks
-        // We want to fetch enough chunks to cover multiple documents.
-        const retriever = vectorStore.asRetriever(10);
+        // Focus on retrieving chunks that represent a diverse set of documents if possible.
+        // For now, we increase the k to get more context.
+        const retriever = vectorStore.asRetriever(15);
         const relevantDocs = await retriever.invoke(query);
 
-        // 3. Construct Context
+        // 3. Construct Context with source tracking
         const context = relevantDocs.map(d =>
-            `Source: ${d.metadata.source}\nContent: ${d.pageContent}`
+            `--- DOCUMENT START ---\nSource: ${d.metadata.source}\nContent: ${d.pageContent}\n--- DOCUMENT END ---`
         ).join("\n\n");
 
         // 4. Call LLM for Comparison (Cerebras)
@@ -41,12 +42,25 @@ exports.compareContracts = async (req, res) => {
         });
 
         const promptTemplate = PromptTemplate.fromTemplate(`
-      You are a legal contract assistant.
+      You are a specialized legal assistant focusing on real estate contracts.
       User Query: {query}
       
-      Based on the following contract excerpts, compare the documents.
-      Return the output ONLY as a JSON array of objects, where each object represents a property/document.
-      Format: [{{ "property": "filename", "details": "summary of clause" }}, ...]
+      INSTRUCTIONS:
+      1. Analyze the provided contract excerpts (Context).
+      2. For each unique document identified by its Source name:
+         - Extract the relevant details as requested by the User Query.
+         - Identify any "Red Flags": high risks, unusual clauses, or terms that might be illegal or highly unfavorable (e.g., excessive deposits, hidden fees, unfair termination clauses).
+      3. If a document doesn't contain information related to the query, still include it but state "Information not found".
+      4. Return ONLY valid JSON as an array of objects. Do not include any conversational text.
+
+      Format:
+      [
+        {{
+          "property": "filename.pdf",
+          "details": "Clear summary of the specific clauses requested",
+          "red_flags": "Description of risks or 'None detected'"
+        }}
+      ]
 
       Context:
       {context}
@@ -57,9 +71,20 @@ exports.compareContracts = async (req, res) => {
         const result = await chain.invoke({ query, context });
 
         // Clean up markdown code blocks if present
-        const cleanResult = result.replace(/```json/g, "").replace(/```/g, "").trim();
+        let cleanResult = result.trim();
+        if (cleanResult.startsWith("```json")) {
+            cleanResult = cleanResult.replace(/^```json/, "").replace(/```$/, "").trim();
+        } else if (cleanResult.startsWith("```")) {
+            cleanResult = cleanResult.replace(/^```/, "").replace(/```$/, "").trim();
+        }
 
-        res.json(JSON.parse(cleanResult));
+        try {
+            const parsedResult = JSON.parse(cleanResult);
+            res.json(parsedResult);
+        } catch (parseError) {
+            console.error("JSON Parsing failed:", cleanResult);
+            res.status(500).json({ error: "LLM output was not valid JSON", raw: cleanResult });
+        }
 
     } catch (error) {
         console.error("Search error:", error);
