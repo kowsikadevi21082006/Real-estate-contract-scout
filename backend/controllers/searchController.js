@@ -24,15 +24,15 @@ exports.compareContracts = async (req, res) => {
         });
 
         // 2. Retrieve relevant chunks
-        // Focus on retrieving chunks that represent a diverse set of documents if possible.
-        // For now, we increase the k to get more context.
         const retriever = vectorStore.asRetriever(15);
         const relevantDocs = await retriever.invoke(query);
 
         // 3. Construct Context with source tracking
-        const context = relevantDocs.map(d =>
-            `--- DOCUMENT START ---\nSource: ${d.metadata.source}\nContent: ${d.pageContent}\n--- DOCUMENT END ---`
-        ).join("\n\n");
+        // LangChain typically puts root mapped fields into .metadata on the JS object
+        const context = relevantDocs.map(d => {
+            const sourceName = d.metadata.source || d.metadata._id || "Unknown Source";
+            return `--- DOCUMENT START ---\nSource: ${sourceName}\nContent: ${d.pageContent}\n--- DOCUMENT END ---`;
+        }).join("\n\n");
 
         // 4. Call LLM for Comparison (Cerebras)
         const model = new ChatCerebras({
@@ -49,7 +49,7 @@ exports.compareContracts = async (req, res) => {
       1. Analyze the provided contract excerpts (Context).
       2. For each unique document identified by its Source name:
          - Extract the relevant details as requested by the User Query.
-         - Identify any "Red Flags": high risks, unusual clauses, or terms that might be illegal or highly unfavorable (e.g., excessive deposits, hidden fees, unfair termination clauses).
+         - Identify any "Red Flags": high risks, unusual clauses, or terms that might be illegal or highly unfavorable.
       3. If a document doesn't contain information related to the query, still include it but state "Information not found".
       4. Return ONLY valid JSON as an array of objects. Do not include any conversational text.
 
@@ -67,10 +67,8 @@ exports.compareContracts = async (req, res) => {
     `);
 
         const chain = promptTemplate.pipe(model).pipe(new StringOutputParser());
-
         const result = await chain.invoke({ query, context });
 
-        // Clean up markdown code blocks if present
         let cleanResult = result.trim();
         if (cleanResult.startsWith("```json")) {
             cleanResult = cleanResult.replace(/^```json/, "").replace(/```$/, "").trim();

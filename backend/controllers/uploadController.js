@@ -4,6 +4,7 @@ const { RecursiveCharacterTextSplitter } = require("@langchain/textsplitters");
 const { HuggingFaceTransformersEmbeddings } = require("@langchain/community/embeddings/huggingface_transformers");
 const { MongoDBAtlasVectorSearch } = require("@langchain/mongodb");
 const mongoose = require("mongoose");
+const Metadata = require("../models/Metadata");
 
 exports.uploadPDF = async (req, res) => {
     try {
@@ -11,20 +12,42 @@ exports.uploadPDF = async (req, res) => {
             return res.status(400).json({ error: "No file uploaded" });
         }
 
-        // ✅ PDF parse
+        const collection = mongoose.connection.db.collection("contracts");
+        const filename = req.file.originalname;
+
+        // ✅ 0. Clean up existing data for this filename
+        // Checking both root 'source' and 'metadata.source' for safety
+        await collection.deleteMany({
+            $or: [
+                { "source": filename },
+                { "metadata.source": filename }
+            ]
+        });
+        await Metadata.deleteOne({ source: filename });
+
+        // ✅ 1. PDF parse
         let pdfData;
         try {
             pdfData = await pdfParse(req.file.buffer);
         } catch (parseError) {
             console.error("PDF Parsing failed:", parseError);
-            throw new Error(`PDF Parsing failed: ${parseError.message}`);
+            if (parseError.message.includes("bad XRef entry")) {
+                return res.status(400).json({
+                    error: `PDF Parsing failed for "${filename}". Corrupted or unsupported PDF format.`
+                });
+            }
+            return res.status(500).json({ error: `PDF Parsing failed: ${parseError.message}` });
+        }
+
+        if (!pdfData.text || pdfData.text.trim().length === 0) {
+            return res.status(400).json({ error: `The file "${filename}" contains no extractable text.` });
         }
 
         const docs = [
             {
                 pageContent: pdfData.text,
                 metadata: {
-                    source: req.file.originalname,
+                    source: filename,
                     uploadedAt: new Date(),
                 },
             },
@@ -37,8 +60,11 @@ exports.uploadPDF = async (req, res) => {
 
         const splitDocs = await splitter.splitDocuments(docs);
 
-        const collection = mongoose.connection.db.collection("contracts");
+        if (!splitDocs || splitDocs.length === 0) {
+            return res.status(400).json({ error: `Could not split document ${filename} into chunks.` });
+        }
 
+        // ✅ 2. Vector Indexing
         await MongoDBAtlasVectorSearch.fromDocuments(
             splitDocs,
             new HuggingFaceTransformersEmbeddings({

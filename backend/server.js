@@ -30,10 +30,12 @@ mongoose.connect(process.env.MONGODB_URI)
 const uploadRoutes = require('./routes/upload');
 const searchRoutes = require('./routes/search');
 const extractionRoutes = require('./routes/extraction');
+const documentRoutes = require('./routes/documents');
 
 app.use('/api/upload', uploadRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/extract', extractionRoutes);
+app.use('/api/documents', documentRoutes);
 
 app.get('/', (req, res) => {
     res.send('Contract Scout API Running');
