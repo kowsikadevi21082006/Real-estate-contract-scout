@@ -4,6 +4,7 @@
 interface ComparisonData {
     property: string;
     details: string;
+    red_flags?: string;
 }
 
 interface ComparisonTableProps {
@@ -42,6 +43,9 @@ export default function ComparisonTable({ data, loading }: ComparisonTableProps)
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Details
                             </th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Red Flags 🚩
+                            </th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -52,6 +56,19 @@ export default function ComparisonTable({ data, loading }: ComparisonTableProps)
                                 </td>
                                 <td className="px-6 py-4 text-sm text-gray-500 whitespace-pre-wrap">
                                     {item.details}
+                                </td>
+                                <td className="px-6 py-4 text-sm text-gray-700 whitespace-pre-wrap">
+                                    {item.red_flags && item.red_flags.toLowerCase() !== 'none' ? (
+                                        <div className="flex items-start gap-2 text-red-600 font-medium bg-red-50 p-3 rounded-lg border border-red-100">
+                                            <span className="text-lg">⚠️</span>
+                                            <span>{item.red_flags}</span>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-2 text-green-600">
+                                            <span className="text-lg">✅</span>
+                                            <span className="text-xs font-normal italic">No risks detected</span>
+                                        </div>
+                                    )}
                                 </td>
                             </tr>
                         ))}

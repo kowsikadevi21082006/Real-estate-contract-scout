@@ -2,7 +2,11 @@
 
 import { useState } from 'react';
 
-export default function FileUpload() {
+interface FileUploadProps {
+    onUploadComplete?: () => void;
+}
+
+export default function FileUpload({ onUploadComplete }: FileUploadProps) {
     const [files, setFiles] = useState<File[]>([]);
     const [uploading, setUploading] = useState(false);
     const [status, setStatus] = useState<string>('');
@@ -15,10 +19,24 @@ export default function FileUpload() {
 
     const handleUpload = async () => {
         setUploading(true);
-        setStatus('Uploading and Indexing...');
+        setStatus('Connecting to server...');
 
         try {
+            // 0. Connection Test
+            console.log("Testing connection to http://localhost:5000/api/health");
+            const healthCheck = await fetch('http://localhost:5000/api/health').catch(e => {
+                console.error("Health check failed:", e);
+                throw new Error("Cannot reach the backend server. Please ensure it is running.");
+            });
+
+            if (!healthCheck.ok) {
+                throw new Error("Server health check failed.");
+            }
+
+            setStatus('Uploading and Indexing...');
+
             for (const file of files) {
+                console.log(`Uploading ${file.name}...`);
                 const formData = new FormData();
                 formData.append('file', file);
 
@@ -28,15 +46,16 @@ export default function FileUpload() {
                 });
 
                 if (!response.ok) {
-                    const errorData = await response.json();
+                    const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
                     throw new Error(errorData.error || `Failed to upload ${file.name}`);
                 }
             }
             setStatus('All files processed successfully!');
             setFiles([]);
-        } catch (error) {
-            console.error(error);
-            setStatus('Error uploading files.');
+            if (onUploadComplete) onUploadComplete();
+        } catch (error: any) {
+            console.error("Upload error details:", error);
+            setStatus(`Error: ${error.message || 'Check console for details.'}`);
         } finally {
             setUploading(false);
         }
