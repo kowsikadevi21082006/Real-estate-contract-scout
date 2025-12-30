@@ -20,43 +20,46 @@ app.use((req, res, next) => {
 
 // Database Connection
 mongoose.connect(process.env.MONGODB_URI)
-    .then(() => console.log('✅ MongoDB Connected'))
+    .then(() => {
+        console.log('✅ MongoDB Connected');
+
+        // Routes
+        const uploadRoutes = require('./routes/upload');
+        const searchRoutes = require('./routes/search');
+        const extractionRoutes = require('./routes/extraction');
+        const documentRoutes = require('./routes/documents');
+
+        app.use('/api/upload', uploadRoutes);
+        app.use('/api/search', searchRoutes);
+        app.use('/api/extract', extractionRoutes);
+        app.use('/api/documents', documentRoutes);
+
+        app.get('/', (req, res) => {
+            res.send('Contract Scout API Running');
+        });
+
+        app.get('/api/health', (req, res) => {
+            res.json({ status: "ok", time: new Date() });
+        });
+
+        // 404 Handler
+        app.use((req, res, next) => {
+            res.status(404).json({ error: "Route not found" });
+        });
+
+        // Global Error Handler
+        app.use((err, req, res, next) => {
+            console.error("Unhandled Error:", err);
+            res.status(500).json({ error: err.message || "Internal Server Error" });
+        });
+
+        // Start the server ONLY after successful database connection and route setup
+        const HOST = '0.0.0.0';
+        app.listen(PORT, HOST, () => {
+            console.log(`Server running at http://localhost:${PORT}`);
+        });
+    })
     .catch(err => {
         console.error('❌ MongoDB Connection Error:', err);
-        // Optional: process.exit(1); // Keep running to allow diagnosis
+        process.exit(1); // Exit process if database connection fails
     });
-
-// Routes
-const uploadRoutes = require('./routes/upload');
-const searchRoutes = require('./routes/search');
-const extractionRoutes = require('./routes/extraction');
-const documentRoutes = require('./routes/documents');
-
-app.use('/api/upload', uploadRoutes);
-app.use('/api/search', searchRoutes);
-app.use('/api/extract', extractionRoutes);
-app.use('/api/documents', documentRoutes);
-
-app.get('/', (req, res) => {
-    res.send('Contract Scout API Running');
-});
-
-app.get('/api/health', (req, res) => {
-    res.json({ status: "ok", time: new Date() });
-});
-
-// 404 Handler
-app.use((req, res, next) => {
-    res.status(404).json({ error: "Route not found" });
-});
-
-// Global Error Handler
-app.use((err, req, res, next) => {
-    console.error("Unhandled Error:", err);
-    res.status(500).json({ error: err.message || "Internal Server Error" });
-});
-
-const HOST = '0.0.0.0';
-app.listen(PORT, HOST, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
-});

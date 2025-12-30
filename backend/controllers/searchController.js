@@ -36,7 +36,7 @@ exports.compareContracts = async (req, res) => {
 
         // 4. Call LLM for Comparison (Cerebras)
         const model = new ChatCerebras({
-            model: "llama3.1-70b",
+            model: "llama-3.3-70b",
             temperature: 0,
             apiKey: process.env.CEREBRAS_API_KEY
         });
@@ -47,11 +47,10 @@ exports.compareContracts = async (req, res) => {
       
       INSTRUCTIONS:
       1. Analyze the provided contract excerpts (Context).
-      2. For each unique document identified by its Source name:
-         - Extract the relevant details as requested by the User Query.
-         - Identify any "Red Flags": high risks, unusual clauses, or terms that might be illegal or highly unfavorable.
-      3. If a document doesn't contain information related to the query, still include it but state "Information not found".
-      4. Return ONLY valid JSON as an array of objects. Do not include any conversational text.
+      2. For each unique document identified by its Source name, extract the relevant details as requested by the User Query.
+      3. Identify any "Red Flags": high risks, unusual clauses, or terms that might be illegal or highly unfavorable. If none, state "None detected".
+      4. If a document doesn't contain information related to the query, still include it but state "Information not found" for the details and "None detected" for red_flags.
+      5. Return ONLY valid JSON as an array of objects, with NO conversational text, preamble, or markdown code block fences (e.g., \`\`\`json or \`\`\`).
 
       Format:
       [
@@ -67,13 +66,22 @@ exports.compareContracts = async (req, res) => {
     `);
 
         const chain = promptTemplate.pipe(model).pipe(new StringOutputParser());
+        console.log(`[Search Controller] Invoking LLM for query: ${query}`);
         const result = await chain.invoke({ query, context });
+        console.log(`[Search Controller] LLM invoked for query: ${query}. Raw result length: ${result ? result.length : 0}`);
+        console.log(`[Search Controller] Raw LLM result for ${query}:`, result);
 
         let cleanResult = result.trim();
         if (cleanResult.startsWith("```json")) {
             cleanResult = cleanResult.replace(/^```json/, "").replace(/```$/, "").trim();
         } else if (cleanResult.startsWith("```")) {
             cleanResult = cleanResult.replace(/^```/, "").replace(/```$/, "").trim();
+        }
+
+        // Fallback for cases where LLM might put json in middle of text, unlikely with current prompt but safe
+        const jsonMatch = cleanResult.match(/```json\n([\s\S]*?)\n```/);
+        if (jsonMatch && jsonMatch[1]) {
+            cleanResult = jsonMatch[1].trim();
         }
 
         try {
