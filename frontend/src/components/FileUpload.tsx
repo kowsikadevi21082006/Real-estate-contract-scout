@@ -44,7 +44,19 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
                 });
 
                 if (!response.ok) {
-                    throw new Error(`Failed to upload ${file.name}`);
+                    let errorMessage = `Failed to upload ${file.name}`;
+                    try {
+                        const errorData = await response.json();
+                        errorMessage = errorData.error || errorMessage;
+                    } catch (e) {
+                        try {
+                            const errorText = await response.text();
+                            if (errorText) errorMessage = errorText;
+                        } catch (textError) {
+                            // ignore
+                        }
+                    }
+                    throw new Error(errorMessage);
                 }
             }
             setStatus('All files processed successfully!');
