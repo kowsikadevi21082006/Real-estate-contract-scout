@@ -51,7 +51,7 @@ export default function Footer() {
                         © {new Date().getFullYear()} Contract Scout. All rights reserved.
                     </p>
                     <p className="text-primary-400 text-sm flex items-center gap-1">
-                        Created by <span className="font-bold text-primary-600">Alice</span>
+                        Created by <span className="font-bold text-primary-600">Kowsika</span>
                     </p>
                 </div>
             </div>

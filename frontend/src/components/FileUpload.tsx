@@ -58,18 +58,18 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
     };
 
     return (
-        <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 transition-all duration-300 hover:shadow-lg hover:shadow-rose-50">
+        <div className="bg-white rounded-2xl p-8 shadow-sm border border-primary-100 transition-all duration-300 hover:shadow-lg hover:shadow-primary-50">
             <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-rose-50 rounded-lg">
-                    <UploadCloud className="w-6 h-6 text-rose-500" />
+                <div className="p-2 bg-primary-50 rounded-lg">
+                    <UploadCloud className="w-6 h-6 text-primary-500" />
                 </div>
-                <h2 className="text-xl font-bold text-slate-800">Upload Contracts</h2>
+                <h2 className="text-xl font-bold text-primary-900">Upload Contracts</h2>
             </div>
 
             <div
                 className={cn(
                     "relative border-2 border-dashed rounded-xl p-10 text-center transition-all duration-300",
-                    isDragOver ? "border-rose-500 bg-rose-50" : "border-slate-200 hover:border-rose-400 hover:bg-rose-50/30"
+                    isDragOver ? "border-primary-500 bg-primary-50" : "border-primary-200 hover:border-primary-400 hover:bg-primary-50/30"
                 )}
                 onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
                 onDragLeave={() => setIsDragOver(false)}
@@ -88,14 +88,14 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
                 />
 
                 <div className="flex flex-col items-center gap-4">
-                    <div className="w-16 h-16 rounded-full bg-rose-50 flex items-center justify-center">
-                        <UploadCloud className="w-8 h-8 text-rose-400" />
+                    <div className="w-16 h-16 rounded-full bg-primary-50 flex items-center justify-center">
+                        <UploadCloud className="w-8 h-8 text-primary-400" />
                     </div>
                     <div>
-                        <p className="text-lg font-medium text-slate-700">
+                        <p className="text-lg font-medium text-primary-700">
                             Click to upload or drag and drop
                         </p>
-                        <p className="text-sm text-slate-400 mt-1">
+                        <p className="text-sm text-primary-400 mt-1">
                             PDF files only (Max 10MB)
                         </p>
                     </div>
@@ -106,12 +106,12 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
                 <div className="mt-6 space-y-4">
                     <div className="space-y-2">
                         {files.map((file, i) => (
-                            <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+                            <div key={i} className="flex items-center justify-between p-3 bg-primary-50 rounded-lg border border-primary-100">
                                 <div className="flex items-center gap-3 overflow-hidden">
-                                    <File className="w-4 h-4 text-rose-500 shrink-0" />
-                                    <span className="text-sm text-slate-700 truncate">{file.name}</span>
+                                    <File className="w-4 h-4 text-primary-500 shrink-0" />
+                                    <span className="text-sm text-primary-700 truncate">{file.name}</span>
                                 </div>
-                                <span className="text-xs text-slate-500 shrink-0">
+                                <span className="text-xs text-primary-500 shrink-0">
                                     {(file.size / 1024 / 1024).toFixed(2)} MB
                                 </span>
                             </div>
@@ -121,7 +121,7 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
                     <button
                         onClick={handleUpload}
                         disabled={uploading}
-                        className="w-full bg-rose-500 text-white py-3 px-4 rounded-xl hover:bg-rose-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium flex items-center justify-center gap-2 shadow-lg shadow-rose-200"
+                        className="w-full bg-primary-600 text-white py-3 px-4 rounded-xl hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium flex items-center justify-center gap-2 shadow-lg shadow-primary-200"
                     >
                         {uploading ? (
                             <>

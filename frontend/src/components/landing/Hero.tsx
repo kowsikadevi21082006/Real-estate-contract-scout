@@ -25,7 +25,7 @@ export default function Hero() {
 
                     <h1 className="text-5xl lg:text-7xl font-black text-primary-900 leading-[1.1] tracking-tight">
                         Contracts made <br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-primary-800">
+                        <span className="text-primary-950">
                             simple & smart.
                         </span>
                     </h1>
