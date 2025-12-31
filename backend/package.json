@@ -13,7 +13,6 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "@huggingface/transformers": "^3.8.1",
     "@langchain/cerebras": "^1.0.1",
     "@langchain/community": "^1.1.1",
     "@langchain/core": "^1.1.8",

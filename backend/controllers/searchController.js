@@ -1,4 +1,4 @@
-const { HuggingFaceTransformersEmbeddings } = require("@langchain/community/embeddings/huggingface_transformers");
+const { OpenAIEmbeddings } = require("@langchain/openai");
 const { ChatCerebras } = require("@langchain/cerebras");
 const { MongoDBAtlasVectorSearch } = require("@langchain/mongodb");
 const mongoose = require("mongoose");
@@ -14,8 +14,9 @@ exports.compareContracts = async (req, res) => {
 
         // 1. Setup Vector Store
         const collection = mongoose.connection.db.collection("contracts");
-        const vectorStore = new MongoDBAtlasVectorSearch(new HuggingFaceTransformersEmbeddings({
-            modelName: "Xenova/all-MiniLM-L6-v2",
+        const vectorStore = new MongoDBAtlasVectorSearch(new OpenAIEmbeddings({
+            modelName: "text-embedding-3-small",
+            apiKey: process.env.OPENAI_API_KEY
         }), {
             collection,
             indexName: "default",

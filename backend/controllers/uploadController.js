@@ -1,7 +1,7 @@
 const pdfParseModule = require("pdf-parse");
 const pdfParse = pdfParseModule.default || pdfParseModule;
 const { RecursiveCharacterTextSplitter } = require("@langchain/textsplitters");
-const { HuggingFaceTransformersEmbeddings } = require("@langchain/community/embeddings/huggingface_transformers");
+const { OpenAIEmbeddings } = require("@langchain/openai");
 const { MongoDBAtlasVectorSearch } = require("@langchain/mongodb");
 const mongoose = require("mongoose");
 const Metadata = require("../models/Metadata");
@@ -76,8 +76,9 @@ exports.uploadPDF = async (req, res) => {
             console.log(`[Upload Controller] Starting vector indexing for ${filename} with ${splitDocs.length} chunks...`);
             await MongoDBAtlasVectorSearch.fromDocuments(
                 splitDocs,
-                new HuggingFaceTransformersEmbeddings({
-                    modelName: "Xenova/all-MiniLM-L6-v2",
+                new OpenAIEmbeddings({
+                    modelName: "text-embedding-3-small",
+                    apiKey: process.env.OPENAI_API_KEY
                 }),
                 {
                     collection,
