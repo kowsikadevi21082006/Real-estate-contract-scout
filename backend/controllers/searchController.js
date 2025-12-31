@@ -1,4 +1,4 @@
-const { OpenAIEmbeddings } = require("@langchain/openai");
+const { CerebrasEmbeddings } = require("@langchain/cerebras");
 const { ChatCerebras } = require("@langchain/cerebras");
 const { MongoDBAtlasVectorSearch } = require("@langchain/mongodb");
 const mongoose = require("mongoose");
@@ -14,9 +14,8 @@ exports.compareContracts = async (req, res) => {
 
         // 1. Setup Vector Store
         const collection = mongoose.connection.db.collection("contracts");
-        const vectorStore = new MongoDBAtlasVectorSearch(new OpenAIEmbeddings({
-            modelName: "text-embedding-3-small",
-            apiKey: process.env.OPENAI_API_KEY
+        const vectorStore = new MongoDBAtlasVectorSearch(new CerebrasEmbeddings({
+            apiKey: process.env.CEREBRAS_API_KEY
         }), {
             collection,
             indexName: "default",
