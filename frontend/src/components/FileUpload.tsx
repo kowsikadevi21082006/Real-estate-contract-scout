@@ -24,9 +24,11 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
         setUploading(true);
         setStatus('Connecting to server...');
 
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
         try {
             // Quick health check
-            await fetch('http://localhost:5000/api/health').catch(() => {
+            await fetch(`${API_URL}/api/health`).catch(() => {
                 throw new Error("Backend server is not reachable.");
             });
 
@@ -36,7 +38,7 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
                 const formData = new FormData();
                 formData.append('file', file);
 
-                const response = await fetch('http://localhost:5000/api/upload', {
+                const response = await fetch(`${API_URL}/api/upload`, {
                     method: 'POST',
                     body: formData,
                 });
